@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -9,7 +10,48 @@ from src.admm import CPDADMM
 
 
 @dataclass
-class CPDAOADMM:
+class AbstractCPDAOADMM(ABC):
+
+    tensor: np.ndarray[tuple[int, ...], np.float64]
+    tensor_rank: int
+    admms: list[CPDADMM, ...]
+    n_iters: int
+
+    tensor_order: int = field(init=False)
+    tensor_mean: np.ndarray = field(init=False)
+    tensor_norm: np.ndarray = field(init=False)
+    factors0: list[np.ndarray[tuple[int, int], np.float64], ...] = field(
+        init=False
+    )
+    factors: list[np.ndarray[tuple[int, int], np.float64], ...] = field(
+        init=False
+    )
+    diagonal: np.ndarray[tuple[int], np.float64] = field(init=False)
+    recons_error: np.ndarray[tuple[int], np.float64] = field(init=False)
+
+    @abstractmethod
+    def __post_init__(self):
+        self.tensor_order = self.tensor.ndim
+        self.tensor_mean = np.mean(self.tensor)
+        self.tensor_norm = la.norm(self.tensor)
+
+        self.recons_error = np.zeros(self.n_iters)
+
+    @abstractmethod
+    def __initialize(self):
+        ...
+
+    @abstractmethod
+    def __call__(self):
+        ...
+
+    @abstractmethod
+    def run(self):
+        ...
+
+
+@dataclass
+class AOADMMASC(AbstractCPDAOADMM):
     """
     Solve CPD using AO (mainly through ADMM)
     Future development may include:
@@ -21,32 +63,8 @@ class CPDAOADMM:
      - The norms of B and C constitute the weights of the diagonal core tensor
     """
 
-    tensor: np.ndarray[tuple[int, ...], np.float64]
-    tensor_rank: int
-    admms: list[CPDADMM, ...]
-    n_iters: int
-
-    tensor_order: int = field(init=False)
-    factors0: list[np.ndarray[tuple[int, int], np.float64], ...] = field(
-        init=False
-    )
-    factors: list[np.ndarray[tuple[int, int], np.float64], ...] = field(
-        init=False
-    )
-    diagonal: np.ndarray[tuple[int], np.float64] = field(init=False)
-    recons_error: np.ndarray[tuple[int], np.float64] = field(init=False)
-
     def __post_init__(self):
-        self.tensor_order = self.tensor.ndim
-        self.tensor_mean = np.mean(self.tensor)
-        self.tensor_norm = la.norm(self.tensor)
-
-        assert len(self.admms) == self.tensor_order, (
-            "Number of ADMM sub-problems must be equal to the number of "
-            "tensor modes "
-        )
-
-        self.recons_error = np.zeros(self.n_iters)
+        super().__post_init__()
 
     def __initialize(self):
         """
@@ -121,9 +139,9 @@ class CPDAOADMM:
         return tensor_unfoldings
 
     def __call__(self, bsum: float = 0):
-        self.aoadmmasc(bsum=bsum)
+        self.run(bsum=bsum)
 
-    def aoadmmasc(self, bsum: float = 0):
+    def run(self, bsum: float = 0):
         # Initialize the factor matrices and the tensor
         self.__initialize()
 

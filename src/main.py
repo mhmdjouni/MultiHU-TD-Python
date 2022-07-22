@@ -2,7 +2,7 @@ from pprint import pprint
 
 import numpy as np
 
-from src.ao_admm import CPDADMM, CPDAOADMM
+from src.ao_admm import CPDADMM, AOADMMASC
 from src.cpdecomposition import FactorMatrix
 
 
@@ -48,7 +48,7 @@ def main():
         for mode in range(tensor_order)
     ]
 
-    # Create an CPDAOADMM object, this requires:
+    # Create an AOADMMASC object, this requires:
     #   - Input tensor
     #   - Tensor rank
     #   - List of ADMM objects, each containing:
@@ -58,7 +58,7 @@ def main():
     #       - n_iters: the number of iterations for ADMM convergence
     #   - Number of iterations
     n_iters_ao = 100
-    ao_admm = CPDAOADMM(
+    ao_admm = AOADMMASC(
         tensor=data_tensor,
         tensor_rank=tensor_rank,
         admms=admm_list,
