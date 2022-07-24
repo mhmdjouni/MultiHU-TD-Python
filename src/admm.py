@@ -7,7 +7,7 @@ from src.proximal_operators import proximal_update_admm
 
 
 @dataclass
-class CPDADMM:
+class ADMM:
     """
     Solves ADMM sub-problem for a given mode.
     This class stores the initial and current (final) states of the factor

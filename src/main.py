@@ -1,8 +1,7 @@
-from pprint import pprint
-
 import numpy as np
 
-from src.ao_admm import CPDADMM, AOADMMASC
+from src.admm import ADMM
+from src.ao_admm import AOADMMASC, AOADMMASCNaive
 
 
 def main():
@@ -11,7 +10,7 @@ def main():
     """
 
     # Natural inputs
-    data_tensor = np.random.randn(3, 5, 4)
+    data_tensor = np.random.randn((10, 5, 3))
     tensor_rank = 2
     constraints = (
         "nonnegative-l1sparsity-aoadmmasc",
@@ -37,14 +36,14 @@ def main():
     #   - tol_error: the tolerance error for end of the loop
     #   - n_iters: the number of iterations for ADMM convergence
     admm_list = [
-        CPDADMM(
+        ADMM(
             tensor_mode=mode,
             constraint=constraints[mode],
             hyperparams=hyperparams[mode],
             tol_error=tolerance_error[mode],
             n_iters=n_iters_admm[mode],
         )
-        for mode in range(tensor_order)
+        for mode in range(data_tensor.ndim)
     ]
 
     # Create an AOADMMASC object, this requires:
@@ -57,13 +56,31 @@ def main():
     #       - n_iters: the number of iterations for ADMM convergence
     #   - Number of iterations
     n_iters_ao = 100
-    ao_admm = AOADMMASC(
+    ao_admm_asc = AOADMMASC(
         tensor=data_tensor,
         tensor_rank=tensor_rank,
         admms=admm_list,
         n_iters=n_iters_ao,
     )
-    ao_admm()
+    ao_admm_asc.run()
+
+    # Create an AOADMMASC object, this requires:
+    #   - Input tensor
+    #   - Tensor rank
+    #   - List of ADMM objects, each containing:
+    #       - tensor_mode: the mode associated with the admms object
+    #       - constraint: the constraint at said mode
+    #       - tol_error: the tolerance error for end of the loop
+    #       - n_iters: the number of iterations for ADMM convergence
+    #   - Number of iterations
+    n_iters_ao = 100
+    ao_admm_ascnaive = AOADMMASCNaive(
+        tensor=data_tensor,
+        tensor_rank=tensor_rank,
+        admms=admm_list,
+        n_iters=n_iters_ao,
+    )
+    ao_admm_ascnaive.run()
 
 
 if __name__ == "__main__":

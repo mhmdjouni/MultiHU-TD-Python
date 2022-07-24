@@ -6,7 +6,7 @@ import numpy.linalg as la
 import tensorly as tl
 from sklearn.preprocessing import normalize
 
-from src.admm import CPDADMM
+from src.admm import ADMM
 
 
 @dataclass
@@ -14,7 +14,7 @@ class AbstractCPDAOADMM(ABC):
 
     tensor: np.ndarray[tuple[int, ...], np.float64]
     tensor_rank: int
-    admms: list[CPDADMM, ...]
+    admms: list[ADMM, ...]
     n_iters: int
 
     tensor_order: int = field(init=False)
@@ -56,7 +56,6 @@ class AbstractCPDAOADMM(ABC):
 
 @dataclass
 class CPDAOADMM(AbstractCPDAOADMM):
-
     def __post_init__(self):
         self.tensor_order = self.tensor.ndim
         self.tensor_mean = np.mean(self.tensor)
@@ -190,7 +189,7 @@ class AOADMMASC(CPDAOADMM):
                     matrices=self.factors[:mode] + self.factors[mode + 1 :]
                 )
 
-                self.factors[mode], dual_vars[mode] = self.admms[mode](
+                self.factors[mode], dual_vars[mode] = self.admms[mode].run(
                     tensor_unfolding=tensor_unfoldings[mode],
                     kr_product=kr_product,
                     factor=self.factors[mode],
@@ -213,8 +212,8 @@ class AOADMMASC(CPDAOADMM):
                 / self.tensor_norm
             )
 
-            # # Update the BSUM parameter if necessary
-            # bsum = 1e-7  + 0.01 * self.recons_error[itr]
+            # Update the BSUM parameter if necessary
+            bsum = 1e-7 + 0.01 * self.recons_error[itr]
 
             # Here, it assumes that the data tensor and the factor matrices
             #   are corrected for the ASC constraint
@@ -277,7 +276,7 @@ class AOADMMASCNaive(CPDAOADMM):
                     matrices=self.factors[:mode] + self.factors[mode + 1 :]
                 )
 
-                self.factors[mode], dual_vars[mode] = self.admms[mode](
+                self.factors[mode], dual_vars[mode] = self.admms[mode].run(
                     tensor_unfolding=tensor_unfoldings[mode],
                     kr_product=kr_product,
                     factor=self.factors[mode],
@@ -299,12 +298,11 @@ class AOADMMASCNaive(CPDAOADMM):
 
             # Compare the reconstruction with the original tensor (RMSE)
             self.recons_error[itr] = (
-                la.norm(recons_tensor - self.tensor)
-                / self.tensor_norm
+                la.norm(recons_tensor - self.tensor) / self.tensor_norm
             )
 
-            # # Update the BSUM parameter if necessary
-            # bsum = 1e-7  + 0.01 * self.recons_error[itr]
+            # Update the BSUM parameter if necessary
+            bsum = 1e-7  + 0.01 * self.recons_error[itr]
 
         # Normalize the factors into the diagonal entries
         self._postprocessing_normalize()
