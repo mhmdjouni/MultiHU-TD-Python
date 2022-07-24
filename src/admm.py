@@ -36,6 +36,25 @@ class CPDADMM:
         factor: np.ndarray[tuple[int, int], np.float64],
         dual_var: np.ndarray[tuple[int, int], np.float64],
         bsum: float = 0,
+    ):
+        """
+        Solves the ADMM sub-problem for a given mode.
+        """
+        return self.run(
+            tensor_unfolding=tensor_unfolding,
+            kr_product=kr_product,
+            factor=factor,
+            dual_var=dual_var,
+            bsum=bsum,
+        )
+
+    def run(
+        self,
+        tensor_unfolding: np.ndarray[tuple[int, int], np.float64],
+        kr_product: np.ndarray[tuple[int, int], np.float64],
+        factor: np.ndarray[tuple[int, int], np.float64],
+        dual_var: np.ndarray[tuple[int, int], np.float64],
+        bsum: float = 0,
     ) -> tuple[
         np.ndarray[tuple[int, int], np.float64],
         np.ndarray[tuple[int, int], np.float64],
