@@ -3,7 +3,6 @@ from pprint import pprint
 import numpy as np
 
 from src.ao_admm import CPDADMM, AOADMMASC
-from src.cpdecomposition import FactorMatrix
 
 
 def main():

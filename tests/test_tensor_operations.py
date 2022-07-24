@@ -11,10 +11,8 @@ from sklearn.preprocessing import normalize
 from tensorly.metrics import MSE, RMSE
 
 
-def test_ao_admm(load_tensor_3, load_factor_matrices_3):
-    """
-    Test the AO-ADMM algorithm
-    """
+def test_load_fixtures(load_tensor_3, load_factor_matrices_3):
+
     tensor = load_tensor_3
     fac_mats = load_factor_matrices_3
     rank = fac_mats[0].shape[1]
