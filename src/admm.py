@@ -57,7 +57,8 @@ class ADMM:
         """
         Solves the ADMM sub-problem for a given mode.
         """
-        # print(f"Matrix {self.factor_names[self.tensor_mode]}")
+        print("")
+        print(f"Matrix {self.factor_names[self.tensor_mode]}")
 
         rank = factor.shape[1]
         kr_hadamard = kr_product.T @ kr_product
@@ -95,12 +96,14 @@ class ADMM:
             prim_res = la.norm(factor - factor_t) / la.norm(factor)
             dual_res = la.norm(factor - factor_0) / la.norm(dual_var)
 
+            if np.mod(itr, 50) == 0:
+                print(f"ADMM Iteration {itr}:"
+                      + "\t" +
+                      f"Prim Residual: {prim_res:.4e}"
+                      + "\t" +
+                      f"Dual Residual: {dual_res:.4e}")
+
             itr += 1
-            # print(f"ADMM Iteration {itr}:"
-            #       + "\t" +
-            #       f"Primal Residual: {prim_res:.4e}"
-            #       + "\t" +
-            #       f"Dual Residual: {dual_res:.4e}")
 
             stop_criter1 = prim_res < self.tol_error
             stop_criter2 = np.isinf(dual_res) or dual_res < self.tol_error

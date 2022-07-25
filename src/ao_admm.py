@@ -255,10 +255,10 @@ class AOADMMASC(AOADMM):
 
         # Loop over the number of iterations
         for itr in range(self.n_iters):
-            # print("")
-            # temp_str = f"AO Iteration {itr}:"
-            # print(temp_str)
-            # print("-" * len(temp_str))
+            print("\n")
+            temp_str = f"AO Iteration {itr}:"
+            print(temp_str)
+            print("-" * len(temp_str))
             # Loop over the number of modes (i.e. factor matrices)
             for mode in [1, 2, 0]:
                 # Solve the current sub-problem with ADMM

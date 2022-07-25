@@ -1,9 +1,11 @@
 from pprint import pprint
+from pathlib import Path
 
 import numpy as np
 import numpy.linalg as la
 import tensorly.cp_tensor as tlcp
 from sklearn.preprocessing import normalize
+import scipy.io as scio
 import matplotlib.pyplot as plt
 
 from src.admm import ADMM
@@ -316,6 +318,89 @@ def main_aoadmmascnaive_toy():
     pass
 
 
+def main_aoadmmasc_real():
+    """
+    Main function with real data
+    """
+    filename = "pavia_university_EMP_Tens_2   7  12  17.mat"
+    filepath = Path(__file__).parents[1] / "data" / "mathematical_morphology" / "pavia_university" / filename
+    data_dict = scio.loadmat(file_name=str(filepath))
+
+    tensor_orig = data_dict["hsi_mm"].astype('float64').transpose(2, 0, 1)
+
+    mode = tensor_orig.ndim
+    dims = tensor_orig.shape
+    rank = 8
+
+    constraints = (
+        "nonnegative",
+        "nonnegative-l1sparsity-aoadmmasc",
+        "nonnegative",
+    )
+    hyperparams = [
+        {},
+        {"l1_lambda": 0.5},
+        {},
+    ]
+    tolerance_error = (1e-2, 1e-3, 1e-2)
+    n_iters_admm = (np.inf, 101, np.inf)
+    n_iters_ao = 100
+
+    admm_list = [
+        ADMM(
+            tensor_mode=mode,
+            constraint=constraints[mode],
+            hyperparams=hyperparams[mode],
+            tol_error=tolerance_error[mode],
+            n_iters=n_iters_admm[mode],
+        )
+        for mode in range(tensor_orig.ndim)
+    ]
+
+    ao_admm_asc = AOADMMASC(
+        tensor=tensor_orig,
+        tensor_rank=rank,
+        admms=admm_list,
+        n_iters=n_iters_ao,
+    )
+
+    ao_admm_asc.solve()
+
+    print("")
+
+    print("Matrix A")
+    print(ao_admm_asc.factors[1])
+    print(f"Norm: {la.norm(ao_admm_asc.factors[1],ord=1, axis=1)}")
+
+    print("")
+
+    print("Matrix B")
+    print(ao_admm_asc.factors[2])
+    print(f"Norm: {la.norm(ao_admm_asc.factors[2], axis=0)}")
+
+    print("")
+
+    print("Matrix C")
+    print(ao_admm_asc.factors[0])
+    print(f"Norm: {la.norm(ao_admm_asc.factors[0], axis=0)}")
+
+    print("")
+
+    print(f"Reconstruction Error: {ao_admm_asc.recons_error[-1]}")
+
+    print("")
+
+    plt.figure()
+    plt.plot(ao_admm_asc.recons_error)
+    plt.show()
+
+    plt.figure()
+    plt.imshow(ao_admm_asc.factors[-2][:, 6].reshape((340, 610)))
+    plt.show()
+
+    pass
+
+
 if __name__ == "__main__":
     main_aoadmm_toy()
     print("Done with AOADMM")
@@ -325,5 +410,8 @@ if __name__ == "__main__":
 
     main_aoadmmascnaive_toy()
     print("Done with AOADMMASC-Naive")
+
+    main_aoadmmasc_real()
+    print("Done with AOADMMASC, with real data")
 
     exit(0)
