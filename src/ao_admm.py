@@ -329,6 +329,9 @@ class AOADMMASCNaive(AOADMM):
         """
         super()._initialize_factors0()
 
+        # Sum-to-one constraint on the 1st factor
+        self.factors0[-2] = normalize(self.factors0[-2], norm="l1", axis=1)
+
         # Get the tensor unfoldings, factor matrices, and dual variables
         tensor_unfoldings = [
             tl.unfold(self.tensor, mode).T for mode in range(self.tensor_order)
@@ -346,8 +349,12 @@ class AOADMMASCNaive(AOADMM):
 
         # Loop over the number of iterations
         for itr in range(self.n_iters):
+            # print("")
+            # temp_str = f"AO Iteration {itr}:"
+            # print(temp_str)
+            # print("-" * len(temp_str))
             # Loop over the number of modes (i.e. factor matrices)
-            for mode in range(self.tensor_order):
+            for mode in [1, 2, 0]:
                 # Solve the current sub-problem with ADMM
                 kr_product = tl.tenalg.khatri_rao(
                     matrices=self.factors[:mode] + self.factors[mode + 1 :]
@@ -378,8 +385,8 @@ class AOADMMASCNaive(AOADMM):
                 la.norm(recons_tensor - self.tensor) / self.tensor_norm
             )
 
-            # # Update the BSUM parameter if necessary
-            # bsum = 1e-7 + 0.01 * self.recons_error[itr]
+            # Update the BSUM parameter if necessary
+            bsum = 1e-7  # + 0.01 * self.recons_error[itr]
 
         # Normalize the factors into the diagonal entries
         self._postprocessing_normalize()
