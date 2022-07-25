@@ -10,7 +10,7 @@ from src.admm import ADMM
 from src.ao_admm import AOADMMASC, AOADMMASCNaive, AOADMM
 
 
-def main_aoadmm():
+def main_aoadmm_toy():
     """
     Main function
     """
@@ -110,7 +110,7 @@ def main_aoadmm():
     pass
 
 
-def main_aoadmmasc():
+def main_aoadmmasc_toy():
     """
     Main function
     """
@@ -213,7 +213,7 @@ def main_aoadmmasc():
     pass
 
 
-def main_aoadmmascnaive():
+def main_aoadmmascnaive_toy():
     """
     Main function
     """
@@ -317,10 +317,13 @@ def main_aoadmmascnaive():
 
 
 if __name__ == "__main__":
-    # main_aoadmm()
-    # print("Done with AOADMM")
-    # main_aoadmmasc()
-    # print("Done with AOADMMASC")
-    main_aoadmmascnaive()
+    main_aoadmm_toy()
+    print("Done with AOADMM")
+
+    main_aoadmmasc_toy()
+    print("Done with AOADMMASC")
+
+    main_aoadmmascnaive_toy()
     print("Done with AOADMMASC-Naive")
+
     exit(0)
