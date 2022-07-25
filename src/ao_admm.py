@@ -55,7 +55,7 @@ class AbstractCPDAOADMM(ABC):
 
 
 @dataclass
-class CPDAOADMM(AbstractCPDAOADMM):
+class AOADMM(AbstractCPDAOADMM):
     def __post_init__(self):
         self.tensor_order = self.tensor.ndim
         self.tensor_mean = np.mean(self.tensor)
@@ -165,7 +165,7 @@ class CPDAOADMM(AbstractCPDAOADMM):
 
 
 @dataclass
-class AOADMMASC(CPDAOADMM):
+class AOADMMASC(AOADMM):
     """
     Solve CPD using AO (mainly through ADMM)
     Future development may include:
@@ -190,6 +190,9 @@ class AOADMMASC(CPDAOADMM):
         :return:
         """
         super()._initialize_factors0()
+
+        # Sum-to-one constraint on the 1st factor
+        self.factors0[-2] = normalize(self.factors0[-2], norm="l1", axis=1)
 
         # Add an artificial channel row to the 2nd factor
         delta = np.mean(self.tensor)
@@ -252,10 +255,10 @@ class AOADMMASC(CPDAOADMM):
 
         # Loop over the number of iterations
         for itr in range(self.n_iters):
-            print("")
-            temp_str = f"AO Iteration {itr}:"
-            print(temp_str)
-            print("-" * len(temp_str))
+            # print("")
+            # temp_str = f"AO Iteration {itr}:"
+            # print(temp_str)
+            # print("-" * len(temp_str))
             # Loop over the number of modes (i.e. factor matrices)
             for mode in [1, 2, 0]:
                 # Solve the current sub-problem with ADMM
@@ -287,7 +290,7 @@ class AOADMMASC(CPDAOADMM):
             )
 
             # Update the BSUM parameter if necessary
-            bsum = 1e-7 # + 0.01 * self.recons_error[itr]
+            bsum = 1e-7  # + 0.01 * self.recons_error[itr]
 
             # Here, it assumes that the data tensor and the factor matrices
             #   are corrected for the ASC constraint
@@ -304,7 +307,7 @@ class AOADMMASC(CPDAOADMM):
 
 
 @dataclass
-class AOADMMASCNaive(CPDAOADMM):
+class AOADMMASCNaive(AOADMM):
     """
     Solve CPD using AO (mainly through ADMM)
     Future development may include:
