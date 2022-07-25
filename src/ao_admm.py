@@ -34,7 +34,7 @@ class AbstractCPDAOADMM(ABC):
         ...
 
     @abstractmethod
-    def _initialize_factors(self):
+    def _initialize_factors0(self):
         ...
 
     @abstractmethod
@@ -61,31 +61,46 @@ class CPDAOADMM(AbstractCPDAOADMM):
         self.tensor_mean = np.mean(self.tensor)
         self.tensor_norm = la.norm(self.tensor)
         self.recons_error = np.zeros(self.n_iters)
-        self._initialize_factors()
+        self._initialize_factors0()
         self.factors = [
-            np.ndarray((dim, self.tensor_rank))
-            for dim in self.tensor.shape
+            np.ones((dim, self.tensor_rank)) for dim in self.tensor.shape
         ]
         self.diagonal = np.ones(self.tensor_rank)
 
-    def _initialize_factors(self):
+    def _initialize_factors0(self):
         # Initialize the factor matrices
         self.factors0 = [
             np.abs(np.random.randn(dim, self.tensor_rank))
             for dim in self.tensor.shape
         ]
 
-        # The 1st factor gets the sum-to-one constraint
-        self.factors0[-2] = normalize(self.factors0[-2], norm="l1", axis=1)
-
         # The 2nd and 3rd factors are normalized column-wise
+        self.factors0[-2] = normalize(self.factors0[-2], norm="l2", axis=0)
         self.factors0[-1] = normalize(self.factors0[-1], norm="l2", axis=0)
         self.factors0[-3] = normalize(self.factors0[-3], norm="l2", axis=0)
 
+    def _initialize_solver(self):
+        """
+        Initialize the factor matrices for the ASC update.
+        The factor matrices are the absolute of the randn generation. Then:
+          The 1st factor gets the sum-to-one constraint.
+          The 2nd and 3rd factors are normalized column-wise.
+        :return:
+        """
+        self._initialize_factors0()
+
+        # Get the tensor unfoldings, factor matrices, and dual variables
+        tensor_unfoldings = [
+            tl.unfold(self.tensor, mode).T for mode in range(self.tensor_order)
+        ]
+        dual_vars = [np.zeros_like(fm) for fm in self.factors0]
+
+        return self.factors0, tensor_unfoldings, dual_vars
+
     def _postprocessing_normalize(self):
         # Normalize the factors into the diagonal entries
-        self.diagonal = la.norm(self.factors[0], axis=0)
-        self.factors[0] /= self.diagonal
+        self.diagonal = la.norm(self.factors[-3], axis=0)
+        self.factors[-3] /= self.diagonal
 
     def _postprocessing_sort_columns(self):
         # Sort the factors by the diagonal entries in descending order
@@ -97,7 +112,56 @@ class CPDAOADMM(AbstractCPDAOADMM):
         self.solve(bsum=bsum)
 
     def solve(self, bsum: float = 0):
-        pass
+        # Initialize
+        self.factors, tensor_unfoldings, dual_vars = self._initialize_solver()
+
+        # Loop over the number of iterations
+        for itr in range(self.n_iters):
+            # print("")
+            # temp_str = f"AO Iteration {itr}:"
+            # print(temp_str)
+            # print("-" * len(temp_str))
+
+            # Loop over the number of modes (i.e. factor matrices)
+            for mode in [1, 2, 0]:
+                # Solve the current sub-problem with ADMM
+                kr_product = tl.tenalg.khatri_rao(
+                    matrices=self.factors[:mode] + self.factors[mode + 1 :]
+                )
+
+                self.factors[mode], dual_vars[mode] = self.admms[mode].solve(
+                    tensor_unfolding=tensor_unfoldings[mode],
+                    kr_product=kr_product,
+                    factor=self.factors[mode],
+                    dual_var=dual_vars[mode],
+                    bsum=bsum,
+                )
+
+            # Normalize the columns except for factors of indexes 0 and -2
+            # Absorb the weights into the factor matrix of index 0
+            weights = la.norm(self.factors[-2], axis=0)
+            self.factors[-2] /= weights
+            weights *= la.norm(self.factors[-1], axis=0)
+            self.factors[-1] /= weights
+            self.factors[-3] *= weights
+
+            # Reconstruct the tensor from the estimated factor matrices
+            recons_tensor = tl.cp_tensor.cp_to_tensor((None, self.factors))
+
+            # Compare the reconstruction with the original tensor (RMSE)
+            self.recons_error[itr] = (
+                la.norm(recons_tensor - self.tensor)
+                / self.tensor_norm
+            )
+
+            # Update the BSUM parameter if necessary
+            bsum = 1e-7 # + 0.01 * self.recons_error[itr]
+
+        # Normalize the factors into the diagonal entries
+        self._postprocessing_normalize()
+
+        # Sort the factors by the diagonal entries in descending order
+        self._postprocessing_sort_columns()
 
 
 @dataclass
@@ -113,7 +177,7 @@ class AOADMMASC(CPDAOADMM):
      - The norms of B and C constitute the weights of the diagonal core tensor
     """
 
-    def _initialize(self):
+    def _initialize_solver(self):
         """
         Initialize the factor matrices for the ASC update.
         The factor matrices are the absolute of the randn generation. Then:
@@ -125,7 +189,7 @@ class AOADMMASC(CPDAOADMM):
           initialized element-wise with the tensor's mean.
         :return:
         """
-        super()._initialize_factors()
+        super()._initialize_factors0()
 
         # Add an artificial channel row to the 2nd factor
         delta = np.mean(self.tensor)
@@ -184,12 +248,16 @@ class AOADMMASC(CPDAOADMM):
 
     def solve(self, bsum: float = 0):
         # Initialize
-        self.factors, tensor_unfoldings, dual_vars = self._initialize()
+        self.factors, tensor_unfoldings, dual_vars = self._initialize_solver()
 
         # Loop over the number of iterations
         for itr in range(self.n_iters):
+            print("")
+            temp_str = f"AO Iteration {itr}:"
+            print(temp_str)
+            print("-" * len(temp_str))
             # Loop over the number of modes (i.e. factor matrices)
-            for mode in [-2, -1, -3]:
+            for mode in [1, 2, 0]:
                 # Solve the current sub-problem with ADMM
                 kr_product = tl.tenalg.khatri_rao(
                     matrices=self.factors[:mode] + self.factors[mode + 1 :]
@@ -203,11 +271,11 @@ class AOADMMASC(CPDAOADMM):
                     bsum=bsum,
                 )
 
-            # # Normalize the columns except for factors of indexes 0 and -2
-            # # Absorb the weights into the factor matrix of index 0
-            # weights = la.norm(self.factors[-1][:-1, :], axis=0)
-            # self.factors[-1][:-1, :] /= weights
-            # self.factors[0] *= weights
+            # Normalize the columns except for factors of indexes 0 and -2
+            # Absorb the weights into the factor matrix of index 0
+            weights = la.norm(self.factors[-1][:-1, :], axis=0)
+            self.factors[-1][:-1, :] /= weights
+            self.factors[0] *= weights
 
             # Reconstruct the tensor from the estimated factor matrices
             recons_tensor = tl.cp_tensor.cp_to_tensor((None, self.factors))
@@ -218,8 +286,8 @@ class AOADMMASC(CPDAOADMM):
                 / self.tensor_norm
             )
 
-            # # Update the BSUM parameter if necessary
-            # bsum = 1e-7 + 0.01 * self.recons_error[itr]
+            # Update the BSUM parameter if necessary
+            bsum = 1e-7 # + 0.01 * self.recons_error[itr]
 
             # Here, it assumes that the data tensor and the factor matrices
             #   are corrected for the ASC constraint
@@ -248,7 +316,7 @@ class AOADMMASCNaive(CPDAOADMM):
      - The norms of B and C constitute the weights of the diagonal core tensor
     """
 
-    def _initialize(self):
+    def _initialize_solver(self):
         """
         Initialize the factor matrices for the ASC update.
         The factor matrices are the absolute of the randn generation. Then:
@@ -256,7 +324,7 @@ class AOADMMASCNaive(CPDAOADMM):
           The 2nd and 3rd factors are normalized column-wise.
         :return:
         """
-        super()._initialize_factors()
+        super()._initialize_factors0()
 
         # Get the tensor unfoldings, factor matrices, and dual variables
         tensor_unfoldings = [
@@ -271,7 +339,7 @@ class AOADMMASCNaive(CPDAOADMM):
 
     def solve(self, bsum: float = 0):
         # Initialize
-        self.factors, tensor_unfoldings, dual_vars = self._initialize()
+        self.factors, tensor_unfoldings, dual_vars = self._initialize_solver()
 
         # Loop over the number of iterations
         for itr in range(self.n_iters):

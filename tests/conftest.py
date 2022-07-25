@@ -66,23 +66,23 @@ def load_aoadmm() -> tuple[
         np.arange(dims[i] * rank).reshape((dims[i], rank)) for i in range(mode)
     ]
     factors[-2] = normalize(factors[-2], norm="l1", axis=1)
-    # factors[-1] = normalize(factors[-1], norm="l2", axis=0)
-    # factors[-3] = normalize(factors[-3], norm="l2", axis=0)
 
-    tensor = tl.cp_tensor.cp_to_tensor((None, factors))
+    weights, factors = tl.cp_tensor.cp_normalize((None, factors))
+
+    tensor = tl.cp_tensor.cp_to_tensor((weights, factors))
 
     constraints = (
-        "nonnegative-l1sparsity-aoadmmasc",
         "nonnegative",
+        "nonnegative-l1sparsity-aoadmmasc",
         "nonnegative",
     )
     hyperparams = [
-        {"l1_lambda": 0.5},
         {},
+        {"l1_lambda": 0.5},
         {},
     ]
     tolerance_error = (1e-2, 1e-2, 1e-2)
-    n_iters_admm = (100, 100, 100)
+    n_iters_admm = (np.inf, 100, np.inf)
     n_iters_ao = 100
 
     admm_list = [

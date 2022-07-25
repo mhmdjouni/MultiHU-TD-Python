@@ -21,6 +21,9 @@ class ADMM:
     tol_error: float
     n_iters: int = -1
 
+    def __post_init__(self):
+        self.factor_names = ["C", "A", "B"]
+
     def __call__(
         self,
         tensor_unfolding: np.ndarray[tuple[int, int], np.float64],
@@ -54,6 +57,8 @@ class ADMM:
         """
         Solves the ADMM sub-problem for a given mode.
         """
+        # print(f"Matrix {self.factor_names[self.tensor_mode]}")
+
         rank = factor.shape[1]
         kr_hadamard = kr_product.T @ kr_product
         rho = np.trace(kr_hadamard) / rank
@@ -63,12 +68,20 @@ class ADMM:
 
         itr = 0
         while True:
+
             factor_t = (
                 la.inv(L)
                 @ (F + rho * (factor + dual_var).T + bsum * factor_conv.T)
             ).T
 
             factor_0 = factor
+
+            # If the constraint is something like "nonnegative", such that
+            #   sometimes the proximal update does not apply any changes (i.e.,
+            #   the factor matrix is already nonnegative),
+            #   then factor_t and factor are the same, which leads to a
+            #   dual variable that remains 0 at the start, corresponding to
+            #   a division by zero.
             factor = proximal_update_admm(
                 factor=factor_t,
                 dual_var=dual_var,
@@ -83,9 +96,14 @@ class ADMM:
             dual_res = la.norm(factor - factor_0) / la.norm(dual_var)
 
             itr += 1
+            # print(f"ADMM Iteration {itr}:"
+            #       + "\t" +
+            #       f"Primal Residual: {prim_res:.4e}"
+            #       + "\t" +
+            #       f"Dual Residual: {dual_res:.4e}")
 
             stop_criter1 = prim_res < self.tol_error
-            stop_criter2 = dual_res < self.tol_error
+            stop_criter2 = np.isinf(dual_res) or dual_res < self.tol_error
             stop_criter3 = itr >= self.n_iters
             if (stop_criter1 and stop_criter2) or stop_criter3:
                 break

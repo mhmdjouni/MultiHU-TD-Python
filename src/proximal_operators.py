@@ -14,17 +14,25 @@ def proximal_update_admm(
     if constraint == "None":
         return factor
 
-    elif constraint == "nonnegative":
+    elif constraint in [
+        "nn",
+        "nonnegative",
+        "nonnegative-asc",
+        "nonnegative-aoadmmasc",
+        "nonnegative-naiveasc",
+    ]:
         return np.maximum(0, factor - dual_var)
 
-    elif constraint == "L1":  # sparsity with L1 norm
+    elif constraint == "l1":  # sparsity with L1 norm
         factor = factor - dual_var
         return np.sign(factor) * np.maximum(
             0, np.abs(factor) - hyperparams["l1_lambda"] / rho
         )
 
     elif constraint in [
-        "NNL1",
+        "nnl1",
+        "nonnegative-l1sparsity",
+        "nonnegative-l1sparsity-asc",
         "nonnegative-l1sparsity-aoadmmasc",
         "nonnegative-l1sparsity-naiveasc",
     ]:

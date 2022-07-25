@@ -26,7 +26,7 @@ def test_aoadmmasc(load_aoadmm):
     dims = list(tensor_orig.shape)
     rank = factors_orig[-2].shape[1]
 
-    factors, tensor_unfoldings, dual_vars = ao_admm_asc._initialize()
+    factors, tensor_unfoldings, dual_vars = ao_admm_asc._initialize_solver()
     dims[-1] += 1
 
     for mode in range(3):
