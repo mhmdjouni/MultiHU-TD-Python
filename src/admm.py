@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import numpy as np
 import numpy.linalg as la
@@ -21,14 +21,6 @@ class ADMM:
     tol_error: float
     n_iters: int = -1
 
-    # initial state of updated parameters
-    factor_mat_0: np.ndarray[tuple[int, int], np.float64] = field(init=False)
-    dual_var_0: np.ndarray[tuple[int, int], np.float64] = field(init=False)
-
-    # current state of updated parameters
-    factor: np.ndarray[tuple[int, int], np.float64] = field(init=False)
-    dual_var: np.ndarray[tuple[int, int], np.float64] = field(init=False)
-
     def __call__(
         self,
         tensor_unfolding: np.ndarray[tuple[int, int], np.float64],
@@ -40,7 +32,7 @@ class ADMM:
         """
         Solves the ADMM sub-problem for a given mode.
         """
-        return self.run(
+        return self.solve(
             tensor_unfolding=tensor_unfolding,
             kr_product=kr_product,
             factor=factor,
@@ -48,7 +40,7 @@ class ADMM:
             bsum=bsum,
         )
 
-    def run(
+    def solve(
         self,
         tensor_unfolding: np.ndarray[tuple[int, int], np.float64],
         kr_product: np.ndarray[tuple[int, int], np.float64],
@@ -62,9 +54,6 @@ class ADMM:
         """
         Solves the ADMM sub-problem for a given mode.
         """
-        self.factor_mat_0 = factor
-        self.dual_var_0 = dual_var
-
         rank = factor.shape[1]
         kr_hadamard = kr_product.T @ kr_product
         rho = np.trace(kr_hadamard) / rank

@@ -59,13 +59,15 @@ def load_aoadmm() -> tuple[
     Load ADMM and AOADMM
     """
     mode = 3
-    dims = (10, 5, 3)
+    dims = (3, 10, 5)
     rank = 2
 
-    factors = [np.random.randn(dims[i], rank) for i in range(mode)]
+    factors = [
+        np.arange(dims[i] * rank).reshape((dims[i], rank)) for i in range(mode)
+    ]
     factors[-2] = normalize(factors[-2], norm="l1", axis=1)
-    factors[-1] = normalize(factors[-1], norm="l2", axis=0)
-    factors[-3] = normalize(factors[-3], norm="l2", axis=0)
+    # factors[-1] = normalize(factors[-1], norm="l2", axis=0)
+    # factors[-3] = normalize(factors[-3], norm="l2", axis=0)
 
     tensor = tl.cp_tensor.cp_to_tensor((None, factors))
 
@@ -80,7 +82,7 @@ def load_aoadmm() -> tuple[
         {},
     ]
     tolerance_error = (1e-2, 1e-2, 1e-2)
-    n_iters_admm = (100, 0, 0)
+    n_iters_admm = (100, 100, 100)
     n_iters_ao = 100
 
     admm_list = [
