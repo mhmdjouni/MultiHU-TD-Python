@@ -278,9 +278,9 @@ def main_aoadmmascnaive_toy():
     print(factors_orig[1])
     print(ao_admm_asc_naive.factors[1])
     print(f"Norm: {la.norm(ao_admm_asc_naive.factors[1],ord=1, axis=1)}")
-    rec_error = la.norm(factors_orig[1] - ao_admm_asc_naive.factors[1]) / la.norm(
-        factors_orig[1]
-    )
+    rec_error = la.norm(
+        factors_orig[1] - ao_admm_asc_naive.factors[1]
+    ) / la.norm(factors_orig[1])
     print(f"Reconstruction error: {rec_error}")
 
     print("")
@@ -289,9 +289,9 @@ def main_aoadmmascnaive_toy():
     print(factors_orig[2])
     print(ao_admm_asc_naive.factors[2])
     print(f"Norm: {la.norm(ao_admm_asc_naive.factors[2], axis=0)}")
-    rec_error = la.norm(factors_orig[2] - ao_admm_asc_naive.factors[2]) / la.norm(
-        factors_orig[2]
-    )
+    rec_error = la.norm(
+        factors_orig[2] - ao_admm_asc_naive.factors[2]
+    ) / la.norm(factors_orig[2])
     print(f"Reconstruction error: {rec_error}")
 
     print("")
@@ -300,9 +300,9 @@ def main_aoadmmascnaive_toy():
     print(factors_orig[0])
     print(ao_admm_asc_naive.factors[0])
     print(f"Norm: {la.norm(ao_admm_asc_naive.factors[0], axis=0)}")
-    rec_error = la.norm(factors_orig[0] - ao_admm_asc_naive.factors[0]) / la.norm(
-        factors_orig[0]
-    )
+    rec_error = la.norm(
+        factors_orig[0] - ao_admm_asc_naive.factors[0]
+    ) / la.norm(factors_orig[0])
     print(f"Reconstruction error: {rec_error}")
 
     print("")
@@ -323,10 +323,16 @@ def main_aoadmmasc_real():
     Main function with real data
     """
     filename = "pavia_university_EMP_Tens_2   7  12  17.mat"
-    filepath = Path(__file__).parents[1] / "data" / "mathematical_morphology" / "pavia_university" / filename
+    filepath = (
+        Path(__file__).parents[1]
+        / "data"
+        / "mathematical_morphology"
+        / "pavia_university"
+        / filename
+    )
     data_dict = scio.loadmat(file_name=str(filepath))
 
-    tensor_orig = data_dict["hsi_mm"].astype('float64').transpose(2, 0, 1)
+    tensor_orig = data_dict["hsi_mm"].astype("float64").transpose(2, 0, 1)
 
     mode = tensor_orig.ndim
     dims = tensor_orig.shape

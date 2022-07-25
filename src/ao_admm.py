@@ -150,12 +150,11 @@ class AOADMM(AbstractCPDAOADMM):
 
             # Compare the reconstruction with the original tensor (RMSE)
             self.recons_error[itr] = (
-                la.norm(recons_tensor - self.tensor)
-                / self.tensor_norm
+                la.norm(recons_tensor - self.tensor) / self.tensor_norm
             )
 
             # Update the BSUM parameter if necessary
-            bsum = 1e-7 # + 0.01 * self.recons_error[itr]
+            bsum = 1e-7  # + 0.01 * self.recons_error[itr]
 
         # Normalize the factors into the diagonal entries
         self._postprocessing_normalize()

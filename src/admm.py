@@ -97,11 +97,13 @@ class ADMM:
             dual_res = la.norm(factor - factor_0) / la.norm(dual_var)
 
             if np.mod(itr, 50) == 0:
-                print(f"ADMM Iteration {itr}:"
-                      + "\t" +
-                      f"Prim Residual: {prim_res:.4e}"
-                      + "\t" +
-                      f"Dual Residual: {dual_res:.4e}")
+                print(
+                    f"ADMM Iteration {itr}:"
+                    + "\t"
+                    + f"Prim Residual: {prim_res:.4e}"
+                    + "\t"
+                    + f"Dual Residual: {dual_res:.4e}"
+                )
 
             itr += 1
 
