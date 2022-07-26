@@ -192,7 +192,7 @@ class AOADMMASC(AOADMM):
           initialized element-wise with the tensor's mean.
         :return:
         """
-        super().initialize_factors0()
+        self.initialize_factors0()
 
         # Sum-to-one constraint on the 1st factor
         self.factors0[-2] = normalize(self.factors0[-2], norm="l1", axis=1)
@@ -330,7 +330,7 @@ class AOADMMASCNaive(AOADMM):
           The 2nd and 3rd factors are normalized column-wise.
         :return:
         """
-        super().initialize_factors0()
+        self.initialize_factors0()
 
         # Sum-to-one constraint on the 1st factor
         self.factors0[-2] = normalize(self.factors0[-2], norm="l1", axis=1)
