@@ -34,7 +34,11 @@ class AbstractCPDAOADMM(ABC):
         ...
 
     @abstractmethod
-    def _initialize_factors0(self):
+    def initialize_factors0(self):
+        ...
+
+    @abstractmethod
+    def _initialize_solver(self):
         ...
 
     @abstractmethod
@@ -61,13 +65,13 @@ class AOADMM(AbstractCPDAOADMM):
         self.tensor_mean = np.mean(self.tensor)
         self.tensor_norm = la.norm(self.tensor)
         self.recons_error = np.zeros(self.n_iters)
-        self._initialize_factors0()
+        self.initialize_factors0()
         self.factors = [
             np.ones((dim, self.tensor_rank)) for dim in self.tensor.shape
         ]
         self.diagonal = np.ones(self.tensor_rank)
 
-    def _initialize_factors0(self):
+    def initialize_factors0(self):
         # Initialize the factor matrices
         self.factors0 = [
             np.abs(np.random.randn(dim, self.tensor_rank))
@@ -87,7 +91,7 @@ class AOADMM(AbstractCPDAOADMM):
           The 2nd and 3rd factors are normalized column-wise.
         :return:
         """
-        self._initialize_factors0()
+        self.initialize_factors0()
 
         # Get the tensor unfoldings, factor matrices, and dual variables
         tensor_unfoldings = [
@@ -188,7 +192,7 @@ class AOADMMASC(AOADMM):
           initialized element-wise with the tensor's mean.
         :return:
         """
-        super()._initialize_factors0()
+        super().initialize_factors0()
 
         # Sum-to-one constraint on the 1st factor
         self.factors0[-2] = normalize(self.factors0[-2], norm="l1", axis=1)
@@ -326,7 +330,7 @@ class AOADMMASCNaive(AOADMM):
           The 2nd and 3rd factors are normalized column-wise.
         :return:
         """
-        super()._initialize_factors0()
+        super().initialize_factors0()
 
         # Sum-to-one constraint on the 1st factor
         self.factors0[-2] = normalize(self.factors0[-2], norm="l1", axis=1)
