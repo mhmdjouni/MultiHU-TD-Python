@@ -31,31 +31,31 @@ class AbstractCPDAOADMM(ABC):
 
     @abstractmethod
     def __post_init__(self):
-        ...
+        pass
 
     @abstractmethod
     def initialize_factors0(self):
-        ...
+        pass
 
     @abstractmethod
     def _initialize_solver(self):
-        ...
+        pass
 
     @abstractmethod
     def _postprocessing_normalize(self):
-        ...
+        pass
 
     @abstractmethod
     def _postprocessing_sort_columns(self):
-        ...
+        pass
 
     @abstractmethod
     def __call__(self):
-        ...
+        pass
 
     @abstractmethod
     def solve(self):
-        ...
+        pass
 
 
 @dataclass
