@@ -1,4 +1,5 @@
 # Multifeature Hyperspectral Unmixing Based on Tensor Decomposition
+[![DOI](https://zenodo.org/badge/513884289.svg)](https://zenodo.org/badge/latestdoi/513884289)
 
 ---
 ### Description
