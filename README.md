@@ -2,15 +2,17 @@
 ## Mohamad JOUNI, Mauro DALLA MURA, Lucas DRUMETZ, and Pierre COMON
 ### IEEE Transactions on Geoscience and Remote Sensing (2023)
 
-[![DOI](https://zenodo.org/badge/513884289.svg)](https://zenodo.org/badge/latestdoi/513884289)
+[![DOI:10.1109/TGRS.2023.3314218](http://img.shields.io/badge/IEEE%20DOI-10.1109/TGRS.2023.3314218-00629B.svg)](https://doi.org/10.1109/TGRS.2023.3314218)
 
 ---
 ### Description
 Code for the paper.
 
+[![DOI](https://zenodo.org/badge/513884289.svg)](https://zenodo.org/badge/latestdoi/513884289)
+
 ---
 ### Citation
-Please cite via either options:
+Please cite the paper via either options:
 * IEEE BibTex format
 ```tex
 @ARTICLE{10251420,
